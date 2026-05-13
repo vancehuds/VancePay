@@ -1,0 +1,1673 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VancePay</title>
+    <link rel="stylesheet" href="css/pos.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div id="app" class="app hidden">
+        <div class="ambient ambient-one"></div>
+        <div class="ambient ambient-two"></div>
+        <div class="grain"></div>
+
+        <div class="toast-container" id="toast-container"></div>
+
+        <section id="cashier-view" class="view hidden">
+            <div class="shell cashier-shell">
+                <header class="shell-header">
+                    <div>
+                        <p class="eyebrow">VancePay</p>
+                        <h1 id="cashier-store-name">POS</h1>
+                        <p class="subcopy" id="cashier-terminal-meta">终端未绑定</p>
+                    </div>
+                    <button class="ghost-button" data-close>关闭</button>
+                </header>
+
+                <div class="cashier-layout history-collapsed" id="cashier-layout">
+                    <section class="card stack-card">
+                        <div class="card-head">
+                            <h2>收银台</h2>
+                            <button class="mini-button" id="refresh-customers-button">刷新顾客</button>
+                        </div>
+
+                        <label class="field">
+                            <span>金额</span>
+                            <input id="amount-input" type="number" min="1" step="0.01" placeholder="100.00">
+                        </label>
+
+                        <div class="field-row">
+                            <label class="field">
+                                <span>折扣 %</span>
+                                <input id="discount-input" type="number" min="0" step="0.01" placeholder="0">
+                            </label>
+                            <label class="field">
+                                <span>小费</span>
+                                <input id="tip-input" type="number" min="0" step="0.01" placeholder="0">
+                            </label>
+                        </div>
+
+                        <label class="field">
+                            <span>订单说明</span>
+                            <textarea id="item-description-input" rows="3" maxlength="120" placeholder="例如：午市套餐 / 含堂食饮品 / 备注口味"></textarea>
+                        </label>
+
+                        <div class="field line-items-editor">
+                            <div class="field-head">
+                                <span>商品明细</span>
+                                <button class="mini-button" id="add-item-line-button" type="button">添加商品</button>
+                            </div>
+                            <p class="helper-copy">填写商品明细后，金额会按商品项自动汇总。</p>
+                            <div class="line-items-list" id="item-lines-list"></div>
+                        </div>
+
+                        <label class="field">
+                            <span>目标顾客</span>
+                            <select id="customer-select"></select>
+                        </label>
+                        <p class="helper-copy">手机支付需要指定顾客，刷卡支付会对附近任意持卡人开放。</p>
+
+                        <div class="customer-list" id="nearby-customer-list"></div>
+
+                        <div class="action-row">
+                            <button class="action-button primary" id="phone-pay-button">手机收款 $0.00</button>
+                            <button class="action-button accent" id="card-pay-button">刷卡收款 $0.00</button>
+                        </div>
+                    </section>
+
+                    <section class="card summary-card">
+                        <div class="card-head">
+                            <h2>结算摘要</h2>
+                            <span class="status-pill" id="cashier-status-pill">空闲</span>
+                        </div>
+
+                        <div class="metric-stack">
+                            <div class="metric-row">
+                                <span>顾客实付</span>
+                                <strong id="preview-final-amount">$0.00</strong>
+                            </div>
+                            <div class="metric-row">
+                                <span>店铺入账</span>
+                                <strong id="preview-net-amount">$0.00</strong>
+                            </div>
+                            <div class="metric-row subtle">
+                                <span>手续费</span>
+                                <strong id="preview-fee-amount">$0.00</strong>
+                            </div>
+                            <div class="metric-row subtle">
+                                <span>税额</span>
+                                <strong id="preview-tax-amount">$0.00</strong>
+                            </div>
+                            <div class="metric-row subtle">
+                                <span>折扣额</span>
+                                <strong id="preview-discount-amount">$0.00</strong>
+                            </div>
+                        </div>
+
+                        <div class="overview-strip" id="cashier-overview-strip"></div>
+
+                        <div class="intent-card" id="active-intent-card">
+                            <p class="intent-title">当前订单</p>
+                            <div id="active-intent-content">暂无待支付订单</div>
+                            <button class="ghost-button hidden" id="cancel-intent-button">取消订单</button>
+                        </div>
+                    </section>
+
+                    <section class="card ledger-card is-collapsed" id="cashier-ledger-card">
+                        <div class="card-head ledger-head">
+                            <div>
+                                <h2>最近交易</h2>
+                                <p class="helper-copy">默认折叠，按需展开查看历史与详情。</p>
+                            </div>
+                            <div class="inline-actions ledger-actions">
+                                <button class="mini-button" id="refresh-transactions-button">刷新</button>
+                                <button class="mini-button" id="toggle-transactions-button" type="button" aria-expanded="false">展开历史</button>
+                            </div>
+                        </div>
+                        <div class="ledger-body hidden" id="cashier-ledger-body">
+                            <div class="ledger-list" id="cashier-transactions"></div>
+                            <div class="detail-panel" id="cashier-transaction-detail">
+                                <div class="detail-placeholder">点击交易查看详情</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+
+        <section id="customer-view" class="view hidden">
+            <div class="shell customer-shell">
+                <header class="shell-header">
+                    <div>
+                        <p class="eyebrow">付款请求</p>
+                        <h1 id="customer-store-name">待支付</h1>
+                        <p class="subcopy" id="customer-status-copy">等待处理</p>
+                    </div>
+                    <button class="ghost-button" data-close>关闭</button>
+                </header>
+
+                <div class="customer-layout">
+                    <section class="card customer-breakdown">
+                        <div class="metric-stack">
+                            <div class="metric-row">
+                                <span>原始金额</span>
+                                <strong id="customer-subtotal">$0.00</strong>
+                            </div>
+                            <div class="metric-row subtle">
+                                <span>折扣</span>
+                                <strong id="customer-discount">$0.00</strong>
+                            </div>
+                            <div class="metric-row subtle">
+                                <span>小费</span>
+                                <strong id="customer-tip">$0.00</strong>
+                            </div>
+                            <div class="metric-row subtle">
+                                <span>手续费</span>
+                                <strong id="customer-fee">$0.00</strong>
+                            </div>
+                            <div class="metric-row subtle">
+                                <span>税额</span>
+                                <strong id="customer-tax">$0.00</strong>
+                            </div>
+                            <div class="metric-row subtle">
+                                <span>支付后余额</span>
+                                <strong id="customer-balance-after">$0.00</strong>
+                            </div>
+                            <div class="metric-row total">
+                                <span>实付</span>
+                                <strong id="customer-total">$0.00</strong>
+                            </div>
+                        </div>
+                        <div class="detail-note hidden" id="customer-item-description-note"></div>
+                        <div class="detail-links hidden" id="customer-item-lines"></div>
+                    </section>
+
+                    <section class="card customer-actions">
+                        <div class="countdown-block">
+                            <p class="eyebrow">订单状态</p>
+                            <h2 id="customer-method-label">手机支付</h2>
+                            <p id="customer-countdown">等待确认</p>
+                        </div>
+                        <div class="action-row">
+                            <button class="action-button muted" id="decline-payment-button">拒绝</button>
+                            <button class="action-button primary" id="confirm-payment-button">支付 $0.00</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+
+        <section id="admin-view" class="view hidden">
+            <div class="shell admin-shell">
+                <header class="shell-header">
+                    <div>
+                        <p class="eyebrow">VancePay Admin</p>
+                        <h1 id="admin-title">管理面板</h1>
+                        <p class="subcopy" id="admin-subcopy">店铺与终端总览</p>
+                    </div>
+                    <div class="inline-actions">
+                        <select id="admin-store-select"></select>
+                        <button class="mini-button" id="admin-refresh-button">刷新</button>
+                        <button class="ghost-button" data-close>关闭</button>
+                    </div>
+                </header>
+
+                <div class="overview-strip admin-overview" id="admin-overview-strip"></div>
+
+                <nav class="admin-tabs">
+                    <button class="tab-button active" data-tab="stores">店铺</button>
+                    <button class="tab-button" data-tab="terminals">终端</button>
+                    <button class="tab-button" data-tab="employees">员工</button>
+                    <button class="tab-button" data-tab="transactions">交易</button>
+                    <button class="tab-button hidden" data-tab="loans" data-admin-only="true">贷款</button>
+                    <button class="tab-button" data-tab="reports">报表</button>
+                    <button class="tab-button" data-tab="tax">税务</button>
+                    <button class="tab-button" data-tab="commission">提成</button>
+                    <button class="tab-button" data-tab="audit">审计</button>
+                    <button class="tab-button hidden" data-tab="models" data-admin-only="true">型号库</button>
+                </nav>
+
+                <div class="admin-grid">
+                    <section class="card admin-panel store-panel" data-panel="stores">
+                        <div class="admin-section store-list-section admin-sidebar-section">
+                            <div class="card-head">
+                                <h2>店铺列表</h2>
+                                <button class="mini-button" id="reset-store-form-button">新建店铺</button>
+                            </div>
+                            <div class="table-list" id="store-list"></div>
+                        </div>
+
+                        <div class="admin-section store-editor-section">
+                            <div class="card-head store-editor-head">
+                                <div>
+                                    <h2 id="store-editor-title">新建店铺</h2>
+                                    <p class="helper-copy" id="store-editor-copy">填写基础信息后创建店铺；点击左侧店铺卡片可切换到编辑模式。</p>
+                                </div>
+                            </div>
+                            <div class="store-workspace-banner" id="store-workspace-banner">
+                                <div class="store-workspace-copy">
+                                    <p class="store-mode-kicker" id="store-mode-kicker">当前工作区</p>
+                                    <strong id="store-mode-title">新建模式</strong>
+                                    <p class="helper-copy" id="store-mode-copy">保存成功后，这里会切换到该店铺的后续管理操作。</p>
+                                </div>
+                                <div class="store-workspace-actions">
+                                    <span class="store-mode-badge" id="store-mode-badge" data-mode="create">新建模式</span>
+                                    <button type="button" class="mini-button hidden" id="store-create-mode-button">切换为新建</button>
+                                </div>
+                            </div>
+                            <form id="store-form" class="form-grid">
+                                <input type="hidden" id="store-id-input">
+                                <label class="field">
+                                    <span>名称</span>
+                                    <input id="store-name-input" type="text" placeholder="店铺名称">
+                                </label>
+                                <label class="field">
+                                    <span>店主 citizenid</span>
+                                    <input id="store-owner-input" type="text" placeholder="ABCD1234">
+                                </label>
+                                <div class="citizenid-lookup" data-citizenid-lookup data-target-input="store-owner-input" data-store-context="selected">
+                                    <div class="field-row citizenid-lookup-row">
+                                        <label class="field">
+                                            <span>在线玩家 ID</span>
+                                            <input type="number" min="1" step="1" placeholder="服务器 ID" data-player-id-input>
+                                        </label>
+                                        <div class="field citizenid-lookup-action">
+                                            <span>快捷填入</span>
+                                            <button type="button" class="mini-button citizenid-lookup-button" data-fill-citizenid>查询并填入</button>
+                                        </div>
+                                    </div>
+                                    <p class="helper-copy citizenid-lookup-note" data-lookup-note>输入在线玩家服务器 ID，可自动查到 CitizenID 并填入上方字段。</p>
+                                </div>
+                                <label class="field hidden" data-admin-only="true">
+                                    <span>入账方式</span>
+                                    <select id="store-settlement-mode-input">
+                                        <option value="store_balance">进入 VancePay 店铺账户</option>
+                                        <option value="public_account">直接进入绑定公账</option>
+                                    </select>
+                                </label>
+                                <label class="field hidden" data-admin-only="true">
+                                    <span>公账标识</span>
+                                    <input id="store-settlement-account-input" type="text" placeholder="例如 police / ambulance">
+                                </label>
+                                <div class="action-row store-form-actions">
+                                    <button type="submit" class="action-button primary" id="save-store-button">创建店铺</button>
+                                    <button type="button" class="action-button muted" id="archive-store-button">归档店铺</button>
+                                </div>
+                            </form>
+
+                            <form id="change-owner-form" class="form-grid">
+                                <label class="field">
+                                    <span>更换店主</span>
+                                    <input id="new-owner-input" type="text" placeholder="新的 citizenid">
+                                </label>
+                                <div class="citizenid-lookup" data-citizenid-lookup data-target-input="new-owner-input" data-store-context="editing">
+                                    <div class="field-row citizenid-lookup-row">
+                                        <label class="field">
+                                            <span>在线玩家 ID</span>
+                                            <input type="number" min="1" step="1" placeholder="服务器 ID" data-player-id-input>
+                                        </label>
+                                        <div class="field citizenid-lookup-action">
+                                            <span>快捷填入</span>
+                                            <button type="button" class="mini-button citizenid-lookup-button" data-fill-citizenid>查询并填入</button>
+                                        </div>
+                                    </div>
+                                    <p class="helper-copy citizenid-lookup-note" data-lookup-note>输入在线玩家服务器 ID，可自动查到 CitizenID 并填入上方字段。</p>
+                                </div>
+                                <button type="submit" class="action-button accent">同步店主</button>
+                            </form>
+
+                            <form id="store-payout-form" class="form-grid">
+                                <div class="card-head">
+                                    <h2>店铺提现</h2>
+                                </div>
+                                <div class="detail-note" id="store-payout-target-note">
+                                    选择店铺后可将余额结算到当前店主银行账户。
+                                </div>
+                                <label class="field">
+                                    <span>提现金额</span>
+                                    <input id="store-payout-amount-input" type="number" min="0.01" step="0.01" placeholder="100.00">
+                                </label>
+                                <label class="field">
+                                    <span>备注</span>
+                                    <textarea id="store-payout-reason-input" rows="2" maxlength="255" placeholder="例如：本日营业款结算"></textarea>
+                                </label>
+                                <button type="submit" class="action-button primary" id="store-payout-button">提现到店主银行</button>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden" data-panel="terminals">
+                        <div class="admin-section admin-sidebar-section">
+                            <div class="card-head">
+                                <h2>终端列表</h2>
+                                <button class="mini-button" id="reset-terminal-form-button">新建</button>
+                            </div>
+                            <div class="table-list" id="terminal-list"></div>
+                        </div>
+
+                        <div class="admin-section">
+                            <div class="card-head">
+                                <h2>终端表单</h2>
+                            </div>
+                            <form id="terminal-form" class="form-grid">
+                                <input type="hidden" id="terminal-id-input">
+                                <label class="field">
+                                    <span>序列号</span>
+                                    <input id="terminal-serial-input" type="text" placeholder="留空自动生成">
+                                </label>
+                                <div class="field-row">
+                                    <label class="field">
+                                        <span>类型</span>
+                                        <select id="terminal-type-input">
+                                            <option value="portable">便携 POS</option>
+                                            <option value="fixed">固定 POS</option>
+                                            <option value="tablet">管理平板</option>
+                                        </select>
+                                    </label>
+                                    <label class="field">
+                                        <span>状态</span>
+                                        <select id="terminal-status-input">
+                                            <option value="active">启用</option>
+                                            <option value="disabled">停用</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <label class="field">
+                                    <span>固定 POS 型号</span>
+                                    <select id="terminal-model-input">
+                                        <option value="standard">标准 POS 机</option>
+                                        <option value="modern">现代 POS 机</option>
+                                    </select>
+                                </label>
+                                <p class="helper-copy" id="terminal-placement-helper">固定 POS 会进入世界预览后再保存。</p>
+                                <div class="detail-note hidden" id="terminal-placement-status"></div>
+                                <div class="action-row terminal-action-row">
+                                    <button type="submit" class="action-button primary" id="save-terminal-button">保存终端</button>
+                                    <button type="button" class="action-button accent hidden" id="save-and-give-terminal-button" data-admin-only="true">保存并发给我</button>
+                                    <button type="button" class="action-button accent hidden" id="place-terminal-button">重新摆放并保存</button>
+                                    <button type="button" class="action-button muted" id="archive-terminal-button">归档终端</button>
+                                </div>
+                                <div class="binding-code-block">
+                                    <div class="card-head compact-head">
+                                        <div>
+                                            <h3>空白设备绑定码</h3>
+                                            <p class="helper-copy">店主、经理和管理员可以生成一次性绑定码，交给尚未绑定的便携 POS 或平板首次绑定。</p>
+                                        </div>
+                                    </div>
+                                    <div class="field-row">
+                                        <label class="field">
+                                            <span>设备类型</span>
+                                            <select id="binding-code-type-input">
+                                                <option value="portable">便携 POS</option>
+                                                <option value="tablet">管理平板</option>
+                                            </select>
+                                        </label>
+                                        <div class="field">
+                                            <span>操作</span>
+                                            <button type="button" class="action-button accent" id="generate-binding-code-button">生成绑定码</button>
+                                        </div>
+                                    </div>
+                                    <div class="detail-note hidden" id="binding-code-note"></div>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden" data-panel="employees">
+                        <div class="admin-section admin-sidebar-section">
+                            <div class="card-head">
+                                <h2>员工列表</h2>
+                                <div class="inline-actions">
+                                    <button class="mini-button" id="sync-employees-button">同步产业账户人员</button>
+                                    <button class="mini-button" id="reset-employee-form-button">新建</button>
+                                </div>
+                            </div>
+                            <p class="helper-copy" id="employee-sync-note">仅已绑定产业账户的店铺支持一键同步人员。</p>
+                            <div class="table-list" id="employee-list"></div>
+                        </div>
+
+                        <div class="admin-section">
+                            <div class="card-head">
+                                <h2 id="employee-form-title">员工表单</h2>
+                            </div>
+                            <p class="helper-copy" id="employee-form-note">可手动添加员工，或点击左侧员工继续编辑其权限。</p>
+                            <form id="employee-form" class="form-grid">
+                                <label class="field">
+                                    <span>CitizenID</span>
+                                    <input id="employee-citizenid-input" type="text" placeholder="ABCD1234">
+                                </label>
+                                <div class="citizenid-lookup" data-citizenid-lookup data-target-input="employee-citizenid-input" data-store-context="selected">
+                                    <div class="field-row citizenid-lookup-row">
+                                        <label class="field">
+                                            <span>在线玩家 ID</span>
+                                            <input type="number" min="1" step="1" placeholder="服务器 ID" data-player-id-input>
+                                        </label>
+                                        <div class="field citizenid-lookup-action">
+                                            <span>快捷填入</span>
+                                            <button type="button" class="mini-button citizenid-lookup-button" data-fill-citizenid>查询并填入</button>
+                                        </div>
+                                    </div>
+                                    <p class="helper-copy citizenid-lookup-note" data-lookup-note>输入在线玩家服务器 ID，可自动查到 CitizenID 并填入上方字段。</p>
+                                </div>
+                                <label class="field">
+                                    <span>角色</span>
+                                    <select id="employee-role-input">
+                                        <option value="cashier">收银员</option>
+                                        <option value="manager">经理</option>
+                                    </select>
+                                </label>
+                                <label class="checkbox-field">
+                                    <input id="employee-refund-input" type="checkbox">
+                                    <span>允许退款</span>
+                                </label>
+                                <label class="checkbox-field">
+                                    <input id="employee-discount-input" type="checkbox">
+                                    <span>允许折扣</span>
+                                </label>
+                                <div class="action-row">
+                                    <button type="submit" class="action-button primary" id="save-employee-button">保存员工</button>
+                                    <button type="button" class="action-button muted" id="remove-employee-button">移除员工</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden" data-panel="transactions">
+                        <div class="admin-section wide">
+                            <div class="card-head">
+                                <h2>交易记录</h2>
+                                <div class="inline-actions">
+                                    <button class="mini-button" id="export-transactions-button">导出 CSV</button>
+                                    <button class="mini-button" id="refresh-admin-transactions-button">刷新</button>
+                                </div>
+                            </div>
+                            <form id="transaction-filter-form" class="filter-grid">
+                                <label class="field">
+                                    <span>类型</span>
+                                    <select id="transaction-type-filter">
+                                        <option value="all">全部</option>
+                                        <option value="payment">支付</option>
+                                        <option value="refund">退款</option>
+                                    </select>
+                                </label>
+                                <label class="field">
+                                    <span>方式</span>
+                                    <select id="transaction-method-filter">
+                                        <option value="all">全部</option>
+                                        <option value="phone">手机</option>
+                                        <option value="card">刷卡</option>
+                                    </select>
+                                </label>
+                                <label class="field">
+                                    <span>状态</span>
+                                    <select id="transaction-status-filter">
+                                        <option value="all">全部</option>
+                                        <option value="completed">完成</option>
+                                        <option value="partially_refunded">部分退款</option>
+                                        <option value="refunded">已退款</option>
+                                    </select>
+                                </label>
+                                <label class="field">
+                                    <span>开始日期</span>
+                                    <input id="transaction-date-from-filter" type="date">
+                                </label>
+                                <label class="field">
+                                    <span>结束日期</span>
+                                    <input id="transaction-date-to-filter" type="date">
+                                </label>
+                            </form>
+                            <div class="transaction-split">
+                                <div class="table-list" id="admin-transaction-list"></div>
+                                <div class="detail-panel" id="admin-transaction-detail">
+                                    <div class="detail-placeholder">点击交易查看详情</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden loan-panel" data-panel="loans">
+                        <div class="admin-section wide">
+                            <div class="card-head">
+                                <h2>贷款管理</h2>
+                                <div class="inline-actions">
+                                    <button class="mini-button" id="refresh-admin-loans-button">刷新</button>
+                                </div>
+                            </div>
+
+                            <form id="loan-filter-form" class="filter-grid loan-filter-grid">
+                                <label class="field">
+                                    <span>搜索</span>
+                                    <input id="loan-search-filter" type="text" placeholder="贷款号 / CitizenID / 任务号">
+                                </label>
+                                <label class="field">
+                                    <span>贷款状态</span>
+                                    <select id="loan-status-filter">
+                                        <option value="all">全部</option>
+                                        <option value="active">活跃</option>
+                                        <option value="paid">已结清</option>
+                                        <option value="defaulted">违约</option>
+                                        <option value="cancelled">已取消</option>
+                                    </select>
+                                </label>
+                                <label class="field">
+                                    <span>到期情况</span>
+                                    <select id="loan-due-filter">
+                                        <option value="all">全部</option>
+                                        <option value="overdue">已逾期</option>
+                                        <option value="due_soon">3 天内到期</option>
+                                        <option value="current">未到期</option>
+                                    </select>
+                                </label>
+                                <label class="field">
+                                    <span>催收状态</span>
+                                    <select id="loan-collection-filter">
+                                        <option value="all">全部</option>
+                                        <option value="none">无任务</option>
+                                        <option value="open">待领取</option>
+                                        <option value="claimed">已领取</option>
+                                        <option value="completed">已完成</option>
+                                        <option value="cancelled">已取消</option>
+                                    </select>
+                                </label>
+                            </form>
+
+                            <div class="report-summary-grid" id="loan-summary-grid"></div>
+
+                            <div class="loan-workspace">
+                                <div class="table-list loan-list" id="admin-loan-list"></div>
+                                <div class="loan-editor-stack">
+                                    <div class="detail-panel" id="admin-loan-detail">
+                                        <div class="detail-placeholder">选择贷款后查看和调整数据</div>
+                                    </div>
+
+                                    <form id="loan-form" class="form-grid loan-form hidden">
+                                        <input type="hidden" id="loan-id-input">
+                                        <label class="field">
+                                            <span>贷款号</span>
+                                            <input id="loan-code-input" type="text" readonly>
+                                        </label>
+                                        <label class="field">
+                                            <span>CitizenID</span>
+                                            <input id="loan-citizenid-input" type="text" readonly>
+                                        </label>
+                                        <label class="field">
+                                            <span>本金</span>
+                                            <input id="loan-principal-input" type="number" min="0" step="0.01">
+                                        </label>
+                                        <label class="field">
+                                            <span>利息</span>
+                                            <input id="loan-interest-input" type="number" min="0" step="0.01">
+                                        </label>
+                                        <label class="field">
+                                            <span>应还总额</span>
+                                            <input id="loan-total-input" type="number" min="0" step="0.01">
+                                        </label>
+                                        <label class="field">
+                                            <span>已还金额</span>
+                                            <input id="loan-repaid-input" type="number" min="0" step="0.01">
+                                        </label>
+                                        <label class="field">
+                                            <span>利率 (%)</span>
+                                            <input id="loan-rate-input" type="number" min="0" max="999.99" step="0.01">
+                                        </label>
+                                        <label class="field">
+                                            <span>期限天数</span>
+                                            <input id="loan-term-input" type="number" min="1" max="3650" step="1">
+                                        </label>
+                                        <label class="field">
+                                            <span>状态</span>
+                                            <select id="loan-status-input">
+                                                <option value="active">活跃</option>
+                                                <option value="paid">已结清</option>
+                                                <option value="defaulted">违约</option>
+                                                <option value="cancelled">已取消</option>
+                                            </select>
+                                        </label>
+                                        <label class="field">
+                                            <span>到期时间</span>
+                                            <input id="loan-due-at-input" type="datetime-local">
+                                        </label>
+                                        <div class="detail-note" id="loan-form-note">调整应还、已还、状态和到期时间后保存。标记已结清会同步关闭对应催收任务。</div>
+                                        <div class="action-row loan-action-row">
+                                            <button type="submit" class="action-button primary" id="save-loan-button">保存贷款</button>
+                                            <button type="button" class="action-button accent" id="create-collection-task-button">生成催收任务</button>
+                                            <button type="button" class="action-button muted hidden" id="cancel-collection-task-button">取消催收任务</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden" data-panel="reports">
+                        <div class="admin-section wide">
+                            <div class="card-head">
+                                <h2>高级报表</h2>
+                                <div class="inline-actions">
+                                    <button class="mini-button" id="export-report-button">导出 CSV</button>
+                                    <button class="mini-button" id="refresh-report-button">刷新</button>
+                                </div>
+                            </div>
+                            <form id="report-filter-form" class="filter-grid">
+                                <label class="field">
+                                    <span>时间范围</span>
+                                    <select id="report-range-filter">
+                                        <option value="7">近 7 天</option>
+                                        <option value="30">近 30 天</option>
+                                        <option value="90">近 90 天</option>
+                                    </select>
+                                </label>
+                                <label class="field">
+                                    <span>开始日期</span>
+                                    <input id="report-date-from-filter" type="date">
+                                </label>
+                                <label class="field">
+                                    <span>结束日期</span>
+                                    <input id="report-date-to-filter" type="date">
+                                </label>
+                            </form>
+                            <div class="report-summary-grid" id="report-summary-grid"></div>
+                            <div class="report-layout">
+                                <div class="detail-panel">
+                                    <div class="card-head compact-head">
+                                        <h3>每日净额走势</h3>
+                                        <span class="helper-copy">支付总额 / 净入账 / 退款额</span>
+                                    </div>
+                                    <div class="report-chart" id="report-daily-chart"></div>
+                                </div>
+                                <div class="report-side">
+                                    <div class="detail-panel">
+                                        <div class="card-head compact-head">
+                                            <h3>支付方式占比</h3>
+                                        </div>
+                                        <div class="report-list" id="report-method-split"></div>
+                                    </div>
+                                    <div class="detail-panel">
+                                        <div class="card-head compact-head">
+                                            <h3>店铺排名</h3>
+                                        </div>
+                                        <div class="report-list" id="report-top-stores"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden tax-panel" data-panel="tax">
+                        <div class="tax-settings-grid">
+                            <div class="admin-section">
+                                <div class="card-head">
+                                    <h2>全局税务设置</h2>
+                                </div>
+                                <form id="tax-default-form" class="form-grid">
+                                    <label class="field">
+                                        <span>全局默认税率 (%)</span>
+                                        <input id="tax-default-rate-input" type="number" min="0" max="100" step="0.01" placeholder="6.00">
+                                    </label>
+                                    <label class="field">
+                                        <span>税收入账方式</span>
+                                        <select id="tax-settlement-mode-input">
+                                            <option value="store_balance">进入当前收款店铺 VancePay 余额</option>
+                                            <option value="public_account">直接进入指定公账</option>
+                                        </select>
+                                    </label>
+                                    <label class="field">
+                                        <span>税收公账标识</span>
+                                        <input id="tax-settlement-account-input" type="text" placeholder="例如 treasury / gov_tax">
+                                    </label>
+                                    <button type="submit" class="action-button primary" id="save-tax-default-button" data-admin-only="true">保存全局税务设置</button>
+                                </form>
+                            </div>
+
+                            <div class="admin-section">
+                                <div class="card-head">
+                                    <h2>店铺税务设置</h2>
+                                </div>
+                                <div class="detail-note" id="tax-settings-note">
+                                    选择店铺后可查看税率、免税状态和全局税收入账去向。税额按折后商品金额计算，小费不计税。
+                                </div>
+                                <form id="tax-settings-form" class="form-grid">
+                                    <label class="field">
+                                        <span>店铺自定义税率 (%)</span>
+                                        <input id="tax-rate-input" type="number" min="0" max="100" step="0.01" placeholder="6.00">
+                                    </label>
+                                    <label class="checkbox-field hidden" data-admin-only="true">
+                                        <input id="tax-custom-rate-enabled-input" type="checkbox">
+                                        <span>启用店铺自定义税率</span>
+                                    </label>
+                                    <label class="checkbox-field hidden" data-admin-only="true">
+                                        <input id="tax-exempt-input" type="checkbox">
+                                        <span>当前店铺免税</span>
+                                    </label>
+                                    <button type="submit" class="action-button primary" id="save-tax-settings-button" data-admin-only="true">保存税务设置</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="admin-section wide tax-report-section">
+                            <div class="card-head">
+                                <h2>税务统计</h2>
+                                <div class="inline-actions">
+                                    <button class="mini-button" id="refresh-tax-report-button">刷新</button>
+                                </div>
+                            </div>
+                            <form id="tax-filter-form" class="filter-grid">
+                                <label class="field">
+                                    <span>时间范围</span>
+                                    <select id="tax-range-filter">
+                                        <option value="7">近 7 天</option>
+                                        <option value="30">近 30 天</option>
+                                        <option value="90">近 90 天</option>
+                                    </select>
+                                </label>
+                                <label class="field">
+                                    <span>开始日期</span>
+                                    <input id="tax-date-from-filter" type="date">
+                                </label>
+                                <label class="field">
+                                    <span>结束日期</span>
+                                    <input id="tax-date-to-filter" type="date">
+                                </label>
+                            </form>
+                            <div class="report-summary-grid" id="tax-report-summary-grid"></div>
+                            <div class="report-layout">
+                                <div class="detail-panel">
+                                    <div class="card-head compact-head">
+                                        <h3>每日税额走势</h3>
+                                        <span class="helper-copy">应收税额 / 已退税额 / 净税额</span>
+                                    </div>
+                                    <div class="report-chart" id="tax-report-daily-chart"></div>
+                                </div>
+                                <div class="report-side">
+                                    <div class="detail-panel">
+                                        <div class="card-head compact-head">
+                                            <h3>支付方式税额占比</h3>
+                                        </div>
+                                        <div class="report-list" id="tax-report-method-split"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden tax-panel" data-panel="commission">
+                        <div class="tax-settings-grid commission-settings-grid">
+                            <div class="admin-section">
+                                <div class="card-head">
+                                    <h2>店铺提成设置</h2>
+                                </div>
+                                <div class="detail-note" id="commission-settings-note">
+                                    选择店铺后可设置提成比例。提成按店铺净入账金额计算，不计税；产生后会进入开单收银员的 VancePay 余额，并在 24 小时后可提现。
+                                </div>
+                                <form id="commission-settings-form" class="form-grid">
+                                    <label class="field">
+                                        <span>提成比例 (%)</span>
+                                        <input id="commission-rate-input" type="number" min="0" max="100" step="0.01" placeholder="5.00">
+                                    </label>
+                                    <button type="submit" class="action-button primary" id="save-commission-settings-button">保存提成设置</button>
+                                </form>
+                            </div>
+
+                            <div class="admin-section">
+                                <div class="card-head">
+                                    <h2>VancePay 余额规则</h2>
+                                </div>
+                                <div class="detail-note" id="commission-balance-note">
+                                    每笔提成都会先进入收银员的 VancePay 余额，满 24 小时后才能提现到银行。若交易发生退款，系统会自动按退款比例冲回对应提成，并同步反映在余额与统计里。
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="admin-section wide tax-report-section">
+                            <div class="card-head">
+                                <h2>提成统计</h2>
+                                <div class="inline-actions">
+                                    <button class="mini-button" id="refresh-commission-report-button">刷新</button>
+                                </div>
+                            </div>
+                            <form id="commission-filter-form" class="filter-grid">
+                                <label class="field">
+                                    <span>时间范围</span>
+                                    <select id="commission-range-filter">
+                                        <option value="7">近 7 天</option>
+                                        <option value="30">近 30 天</option>
+                                        <option value="90">近 90 天</option>
+                                    </select>
+                                </label>
+                                <label class="field">
+                                    <span>开始日期</span>
+                                    <input id="commission-date-from-filter" type="date">
+                                </label>
+                                <label class="field">
+                                    <span>结束日期</span>
+                                    <input id="commission-date-to-filter" type="date">
+                                </label>
+                            </form>
+                            <div class="report-summary-grid" id="commission-report-summary-grid"></div>
+                            <div class="report-layout">
+                                <div class="detail-panel">
+                                    <div class="card-head compact-head">
+                                        <h3>每日提成走势</h3>
+                                        <span class="helper-copy">产生提成 / 冲回提成 / 净提成</span>
+                                    </div>
+                                    <div class="report-chart" id="commission-report-daily-chart"></div>
+                                </div>
+                                <div class="report-side">
+                                    <div class="detail-panel">
+                                        <div class="card-head compact-head">
+                                            <h3>支付方式提成占比</h3>
+                                        </div>
+                                        <div class="report-list" id="commission-report-method-split"></div>
+                                    </div>
+                                    <div class="detail-panel">
+                                        <div class="card-head compact-head">
+                                            <h3>收银员排行</h3>
+                                        </div>
+                                        <div class="report-list" id="commission-report-top-cashiers"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden" data-panel="audit">
+                        <div class="admin-section wide">
+                            <div class="card-head">
+                                <h2>审计日志</h2>
+                                <div class="inline-actions">
+                                    <button class="mini-button" id="export-audit-button">导出 CSV</button>
+                                    <button class="mini-button" id="refresh-audit-button">刷新</button>
+                                </div>
+                            </div>
+                            <div class="table-list" id="audit-list"></div>
+                        </div>
+                    </section>
+
+                    <section class="card admin-panel hidden" data-panel="models">
+                        <div class="admin-section admin-sidebar-section">
+                            <div class="card-head">
+                                <h2>型号列表</h2>
+                                <button class="mini-button" id="reset-model-form-button">新建</button>
+                            </div>
+                            <div class="table-list" id="model-list"></div>
+                        </div>
+
+                        <div class="admin-section">
+                            <div class="card-head">
+                                <h2>型号表单</h2>
+                            </div>
+                            <form id="model-form" class="form-grid">
+                                <label class="field">
+                                    <span>型号 Key</span>
+                                    <input id="model-key-input" type="text" placeholder="classic_counter">
+                                </label>
+                                <label class="field">
+                                    <span>显示名称</span>
+                                    <input id="model-label-input" type="text" placeholder="经典柜台 POS">
+                                </label>
+                                <label class="field">
+                                    <span>GTA 模型名</span>
+                                    <input id="model-name-input" type="text" placeholder="prop_till_01">
+                                </label>
+                                <label class="field">
+                                    <span>状态</span>
+                                    <select id="model-status-input">
+                                        <option value="active">启用</option>
+                                        <option value="archived">归档</option>
+                                    </select>
+                                </label>
+                                <div class="action-row">
+                                    <button type="submit" class="action-button primary">保存型号</button>
+                                    <button type="button" class="action-button muted" id="archive-model-button">归档型号</button>
+                                </div>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+
+        <section id="police-ticket-view" class="view police-ticket-view hidden" aria-live="polite">
+            <div class="ticket-stage">
+                <article id="police-ticket-document" class="police-ticket paper-aged ticket-type-notice ticket-status-unpaid">
+                    <div class="ticket-corner ticket-corner-left"></div>
+                    <div class="ticket-corner ticket-corner-right"></div>
+                    <div class="ticket-watermark" id="police-ticket-watermark">LSPD</div>
+
+                    <header class="ticket-header">
+                        <div class="ticket-agency-block">
+                            <div class="ticket-badge" id="police-ticket-badge" aria-hidden="true">LS</div>
+                            <div>
+                                <p class="ticket-kicker" id="police-ticket-agency">洛圣都警察局</p>
+                                <h1 id="police-ticket-title">行政处罚告知单</h1>
+                                <p class="ticket-subtitle" id="police-ticket-subtitle">LOS SANTOS POLICE DEPARTMENT</p>
+                            </div>
+                        </div>
+                        <div class="ticket-number-block">
+                            <span>罚单编号</span>
+                            <strong id="police-ticket-code">PF000000</strong>
+                            <em id="police-ticket-issued-at">--</em>
+                        </div>
+                    </header>
+
+                    <div class="ticket-status-strip">
+                        <span id="police-ticket-type-label">行政处罚告知单</span>
+                        <strong id="police-ticket-status-label">未缴纳</strong>
+                    </div>
+
+                    <section class="ticket-party-grid">
+                        <div class="ticket-field">
+                            <span>被处罚人</span>
+                            <strong id="police-ticket-target">未知</strong>
+                        </div>
+                        <div class="ticket-field">
+                            <span>开单警员</span>
+                            <strong id="police-ticket-officer">未知</strong>
+                        </div>
+                        <div class="ticket-field">
+                            <span>执法单位</span>
+                            <strong id="police-ticket-agency-field">洛圣都警察局</strong>
+                        </div>
+                        <div class="ticket-field">
+                            <span>处理状态</span>
+                            <strong id="police-ticket-status-field">未缴纳</strong>
+                        </div>
+                    </section>
+
+                    <section class="ticket-reason-block">
+                        <div class="ticket-reason-head">
+                            <span>处罚原因</span>
+                            <strong id="police-ticket-amount">$0.00</strong>
+                        </div>
+                        <p id="police-ticket-reason">未填写</p>
+                    </section>
+
+                    <section class="ticket-traffic-block" aria-hidden="true">
+                        <div class="traffic-row traffic-head">
+                            <span>代码</span>
+                            <span>违法事项</span>
+                            <span>金额</span>
+                        </div>
+                        <div class="traffic-row">
+                            <span id="police-ticket-traffic-code">LS-01</span>
+                            <span id="police-ticket-traffic-reason">未填写</span>
+                            <span id="police-ticket-traffic-amount">$0.00</span>
+                        </div>
+                        <div class="traffic-checks">
+                            <span>☑ 现场开具</span>
+                            <span>☑ 银行缴纳</span>
+                            <span>□ 需出庭</span>
+                        </div>
+                    </section>
+
+                    <section class="ticket-meta-grid">
+                        <div>
+                            <span>开具时间</span>
+                            <strong id="police-ticket-created-at">--</strong>
+                        </div>
+                        <div>
+                            <span>缴纳时间</span>
+                            <strong id="police-ticket-paid-at">未缴纳</strong>
+                        </div>
+                        <div>
+                            <span>信誉影响</span>
+                            <strong id="police-ticket-credit">--</strong>
+                        </div>
+                    </section>
+
+                    <footer class="ticket-footer">
+                        <button type="button" class="ticket-qr-action" id="police-ticket-pay-area" aria-label="缴纳罚单">
+                            <span class="ticket-qr" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                            <span class="ticket-qr-copy" id="police-ticket-pay-copy">点击二维码缴纳罚款</span>
+                            <strong id="police-ticket-pay-amount">$0.00</strong>
+                        </button>
+
+                        <div class="ticket-signature">
+                            <span>警员签名</span>
+                            <strong id="police-ticket-signature">Officer</strong>
+                            <em id="police-ticket-signature-seal">执法单位公章</em>
+                        </div>
+
+                        <button type="button" class="ticket-close-action" id="police-ticket-close">收起票据</button>
+                    </footer>
+
+                    <div class="ticket-stamp" id="police-ticket-stamp">未缴纳</div>
+                    <div class="ticket-barcode" aria-hidden="true"><span></span></div>
+                    <p class="ticket-fineprint">本罚单作为 VancePay 纸质凭证保存。使用罚单物品可再次查看，缴纳状态以系统记录为准。</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="ticket-manager-view" class="view hidden">
+            <div class="shell ticket-manager-shell">
+                <header class="shell-header">
+                    <div>
+                        <p class="eyebrow">VancePay Citation Desk</p>
+                        <h1 id="ticket-manager-title">罚单管理</h1>
+                        <p class="subcopy" id="ticket-manager-subcopy">查看并处理职业罚单记录</p>
+                    </div>
+                    <div class="inline-actions">
+                        <span class="status-pill" id="ticket-manager-scope-badge" data-scope="job">职业管理</span>
+                        <button class="mini-button" id="ticket-manager-refresh-button">刷新</button>
+                        <button class="ghost-button" data-close>关闭</button>
+                    </div>
+                </header>
+
+                <div class="ticket-manager-toolbar">
+                    <nav class="admin-tabs ticket-manager-tabs">
+                        <button class="tab-button active" data-ticket-manager-panel="tickets">罚单记录</button>
+                        <button class="tab-button" id="ticket-manager-audit-tab" data-ticket-manager-panel="audit">审计日志</button>
+                    </nav>
+                    <form class="filter-grid ticket-manager-filter" id="ticket-manager-filter-form">
+                        <label class="field">
+                            <span>机构</span>
+                            <select id="ticket-manager-agency-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>状态</span>
+                            <select id="ticket-manager-status-filter">
+                                <option value="all">全部</option>
+                                <option value="unpaid">未缴纳</option>
+                                <option value="paid">已缴纳</option>
+                                <option value="cancelled">已取消</option>
+                            </select>
+                        </label>
+                        <label class="field">
+                            <span>搜索</span>
+                            <input id="ticket-manager-search-filter" type="text" placeholder="编号 / 人员 / 原因">
+                        </label>
+                        <label class="field">
+                            <span>开始日期</span>
+                            <input id="ticket-manager-date-from-filter" type="date">
+                        </label>
+                        <label class="field">
+                            <span>结束日期</span>
+                            <input id="ticket-manager-date-to-filter" type="date">
+                        </label>
+                        <button type="submit" class="action-button primary">筛选</button>
+                    </form>
+                </div>
+
+                <div class="overview-strip ticket-manager-summary" id="ticket-manager-summary"></div>
+
+                <div class="ticket-manager-grid" data-ticket-manager-view="tickets">
+                    <section class="card ticket-manager-list-panel">
+                        <div class="card-head">
+                            <div>
+                                <h2>罚单列表</h2>
+                                <p class="helper-copy">职业成员仅可管理本职业机构罚单，管理员可切换全部机构。</p>
+                            </div>
+                        </div>
+                        <div class="ticket-manager-list" id="ticket-manager-list"></div>
+                    </section>
+
+                    <section class="card ticket-manager-detail-panel">
+                        <div class="card-head">
+                            <div>
+                                <h2>记录详情</h2>
+                                <p class="helper-copy">可取消未缴罚单，或将已取消罚单恢复为未缴。</p>
+                            </div>
+                        </div>
+                        <div class="ticket-manager-detail" id="ticket-manager-detail">
+                            <div class="detail-placeholder">选择左侧罚单查看详情</div>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="card ticket-manager-audit-panel hidden" data-ticket-manager-view="audit">
+                    <div class="card-head">
+                        <div>
+                            <h2>罚单审计</h2>
+                            <p class="helper-copy">Boss 可查看本机构罚单审计，管理员可查看全局罚单审计。</p>
+                        </div>
+                        <button class="mini-button" id="ticket-manager-audit-refresh-button">刷新审计</button>
+                    </div>
+                    <div class="table-list ticket-manager-audit-list" id="ticket-manager-audit-list"></div>
+                </section>
+            </div>
+        </section>
+
+        <section id="collections-view" class="view hidden">
+            <div class="shell collections-shell">
+                <header class="shell-header">
+                    <div>
+                        <p class="eyebrow">VancePay Collections</p>
+                        <h1>追债任务</h1>
+                        <p class="subcopy" id="collections-subcopy">公开逾期贷款任务池</p>
+                    </div>
+                    <div class="inline-actions">
+                        <button class="mini-button" id="collections-refresh-button">刷新</button>
+                        <button class="ghost-button" data-close>关闭</button>
+                    </div>
+                </header>
+
+                <div class="overview-strip collections-overview" id="collections-overview-strip">
+                    <div class="overview-pill">
+                        <span>可领取</span>
+                        <strong id="collections-open-count">0</strong>
+                    </div>
+                    <div class="overview-pill">
+                        <span>进行中</span>
+                        <strong id="collections-my-count">0</strong>
+                    </div>
+                    <div class="overview-pill">
+                        <span>领取上限</span>
+                        <strong id="collections-limit-count">1</strong>
+                    </div>
+                </div>
+
+                <div class="collections-grid">
+                    <section class="card collections-panel">
+                        <div class="card-head">
+                            <div>
+                                <h2>任务池</h2>
+                                <p class="helper-copy">逾期贷款会进入这里，先领取者获得追踪线索。</p>
+                            </div>
+                            <span class="status-pill" id="collections-pool-status">待刷新</span>
+                        </div>
+                        <div class="collection-task-list" id="collection-available-list"></div>
+                    </section>
+
+                    <section class="card collections-panel">
+                        <div class="card-head">
+                            <div>
+                                <h2>我的任务</h2>
+                                <p class="helper-copy">领取后可刷新线索，贷款结清后自动完成。</p>
+                            </div>
+                        </div>
+                        <div class="collection-task-list" id="collection-my-list"></div>
+                    </section>
+
+                    <section class="card collections-detail-panel">
+                        <div class="card-head">
+                            <div>
+                                <h2>线索</h2>
+                                <p class="helper-copy" id="collection-detail-copy">选择已领取任务查看线索。</p>
+                            </div>
+                            <button class="mini-button" id="collection-clue-refresh-button">刷新线索</button>
+                        </div>
+                        <div class="collection-detail" id="collection-detail">
+                            <div class="detail-placeholder">暂无已领取任务</div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section id="card-swipe-overlay" class="card-swipe-overlay hidden" aria-live="polite">
+        <div class="card-swipe-panel">
+            <p class="card-swipe-kicker">VancePay Tap</p>
+            <div class="card-swipe-head">
+                <div>
+                    <h2 id="card-swipe-store-name">现场刷卡</h2>
+                    <p class="card-swipe-summary" id="card-swipe-summary">附近任意持卡人都可以完成付款</p>
+                </div>
+                <span class="card-swipe-status" id="card-swipe-countdown">等待刷卡</span>
+            </div>
+
+            <div class="card-swipe-amount" id="card-swipe-amount">$0.00</div>
+
+            <div class="card-swipe-meta">
+                <div class="card-swipe-meta-item">
+                    <span>终端</span>
+                    <strong id="card-swipe-terminal">当前 POS</strong>
+                </div>
+                <div class="card-swipe-meta-item">
+                    <span>队列</span>
+                    <strong id="card-swipe-queue">等待附近持卡人响应</strong>
+                </div>
+            </div>
+
+            <div class="card-swipe-footer">
+                <span id="card-swipe-helper">按 E 刷卡支付</span>
+                <span>无需打开付款页</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="refund-dialog" class="refund-dialog hidden" aria-live="polite">
+        <form id="refund-dialog-form" class="refund-dialog-panel">
+            <p class="refund-dialog-kicker">VancePay Refund</p>
+            <div class="refund-dialog-head">
+                <div>
+                    <h2 id="refund-dialog-title">处理退款</h2>
+                    <p class="refund-dialog-summary" id="refund-dialog-summary">确认退款金额和原因后提交。</p>
+                </div>
+                <button type="button" class="ghost-button" id="refund-dialog-close">关闭</button>
+            </div>
+
+            <div class="refund-dialog-body">
+                <label class="field">
+                    <span>退款金额</span>
+                    <input id="refund-dialog-amount" type="number" min="0.01" step="0.01" inputmode="decimal" required>
+                </label>
+
+                <label class="field">
+                    <span id="refund-dialog-reason-label">退款原因</span>
+                    <textarea id="refund-dialog-reason" rows="3" maxlength="255" placeholder="例如：顾客取消订单、重复支付、商品需重下"></textarea>
+                </label>
+
+                <p class="helper-copy refund-dialog-helper" id="refund-dialog-helper">请输入退款金额和原因后提交。</p>
+            </div>
+
+            <div class="action-row refund-dialog-actions">
+                <button type="button" class="action-button muted" id="refund-dialog-cancel">取消</button>
+                <button type="submit" class="action-button primary" id="refund-dialog-submit">确认退款</button>
+            </div>
+        </form>
+    </section>
+
+    <script>
+        const resourceName = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'vancepay-pos';
+
+        window.VancePayApp = {
+            state: {
+                view: null,
+                payloads: {},
+                placementActive: false,
+                refundDialog: null
+            },
+            views: {
+                cashier: document.getElementById('cashier-view'),
+                customer: document.getElementById('customer-view'),
+                admin: document.getElementById('admin-view'),
+                policeTicketManager: document.getElementById('ticket-manager-view'),
+                collections: document.getElementById('collections-view'),
+                policeTicket: document.getElementById('police-ticket-view')
+            },
+            app: document.getElementById('app'),
+            cardSwipeOverlay: document.getElementById('card-swipe-overlay'),
+            refundDialogEl: document.getElementById('refund-dialog'),
+            refundDialogForm: document.getElementById('refund-dialog-form'),
+            refundDialogTitle: document.getElementById('refund-dialog-title'),
+            refundDialogSummary: document.getElementById('refund-dialog-summary'),
+            refundDialogAmount: document.getElementById('refund-dialog-amount'),
+            refundDialogReason: document.getElementById('refund-dialog-reason'),
+            refundDialogReasonLabel: document.getElementById('refund-dialog-reason-label'),
+            refundDialogHelper: document.getElementById('refund-dialog-helper'),
+            toastContainer: document.getElementById('toast-container'),
+            post(endpoint, data = {}) {
+                return fetch(`https://${resourceName}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8'
+                    },
+                    body: JSON.stringify(data)
+                }).then((response) => response.json());
+            },
+            roundCurrency(value) {
+                return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+            },
+            formatCurrency(value) {
+                const amount = Number(value || 0);
+                return `$${amount.toFixed(2)}`;
+            },
+            formatDate(value) {
+                if (!value) return '--';
+                return String(value).replace('T', ' ').slice(0, 19);
+            },
+            setRibbon(message, tone = 'neutral') {
+                if (!message) return;
+                const toast = document.createElement('div');
+                toast.className = `toast-notification tone-${tone}`;
+                
+                const icon = document.createElement('div');
+                icon.className = 'toast-icon';
+                
+                const content = document.createElement('div');
+                content.className = 'toast-content';
+                content.textContent = message;
+
+                toast.appendChild(icon);
+                toast.appendChild(content);
+
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'toast-close';
+                closeBtn.innerHTML = '&times;';
+                toast.appendChild(closeBtn);
+
+                this.toastContainer.appendChild(toast);
+
+                let timeoutId;
+                let startTime, remaining = 5000;
+
+                const startTimer = () => {
+                    startTime = Date.now();
+                    timeoutId = setTimeout(() => {
+                        this.removeToast(toast);
+                    }, remaining);
+                };
+
+                const pauseTimer = () => {
+                    clearTimeout(timeoutId);
+                    remaining -= (Date.now() - startTime);
+                };
+
+                startTimer();
+
+                toast.addEventListener('mouseenter', pauseTimer);
+                toast.addEventListener('mouseleave', startTimer);
+                
+                const dismiss = () => {
+                    clearTimeout(timeoutId);
+                    this.removeToast(toast);
+                };
+                
+                toast.addEventListener('click', (e) => {
+                    if (e.target !== closeBtn) dismiss();
+                });
+                closeBtn.addEventListener('click', dismiss);
+
+                void toast.offsetWidth; // Force reflow
+                toast.classList.add('show');
+            },
+            removeToast(toast) {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                });
+            },
+            syncDocumentVisibility(forceVisible = null) {
+                const visible = forceVisible == null
+                    ? Boolean(
+                        this.state.view ||
+                        (this.cardSwipeOverlay && !this.cardSwipeOverlay.classList.contains('hidden')) ||
+                        (this.refundDialogEl && !this.refundDialogEl.classList.contains('hidden'))
+                    )
+                    : forceVisible === true;
+                document.documentElement.dataset.uiVisible = visible ? 'true' : 'false';
+            },
+            reset() {
+                this.state.view = null;
+                this.state.placementActive = false;
+                this.state.payloads = {};
+                this.closeRefundDialog(null);
+                this.hideAllViews();
+                this.app.classList.add('hidden');
+
+                if (this.cardSwipeOverlay) {
+                    this.cardSwipeOverlay.classList.add('hidden');
+                }
+
+                this.syncDocumentVisibility(false);
+            },
+            hideAllViews() {
+                Object.values(this.views).forEach((view) => view.classList.add('hidden'));
+            },
+            closeRefundDialog(result = null) {
+                const activeDialog = this.state.refundDialog;
+
+                if (!this.refundDialogEl) {
+                    this.state.refundDialog = null;
+                    return;
+                }
+
+                this.refundDialogEl.classList.add('hidden');
+                this.refundDialogAmount.value = '';
+                this.refundDialogReason.value = '';
+                this.state.refundDialog = null;
+                this.syncDocumentVisibility();
+
+                if (activeDialog && typeof activeDialog.resolve === 'function') {
+                    activeDialog.resolve(result);
+                }
+            },
+            requestRefund(options = {}) {
+                if (!this.refundDialogEl) {
+                    return Promise.resolve(null);
+                }
+
+                if (this.state.refundDialog) {
+                    this.closeRefundDialog(null);
+                }
+
+                const maxAmount = this.roundCurrency(options.maxAmount || 0);
+                const requestedInitialAmount = options.initialAmount == null ? maxAmount : this.roundCurrency(options.initialAmount);
+                const initialAmount = Math.min(maxAmount, requestedInitialAmount > 0 ? requestedInitialAmount : maxAmount);
+                const requireReason = options.requireReason === true;
+
+                this.refundDialogTitle.textContent = options.title || '处理退款';
+                this.refundDialogSummary.textContent = options.summary || '确认退款金额和原因后提交。';
+                this.refundDialogAmount.value = initialAmount > 0 ? initialAmount.toFixed(2) : '';
+                this.refundDialogAmount.min = '0.01';
+                this.refundDialogAmount.max = maxAmount > 0 ? maxAmount.toFixed(2) : '';
+                this.refundDialogReason.value = options.initialReason || '';
+                this.refundDialogReason.required = requireReason;
+                this.refundDialogReasonLabel.textContent = requireReason ? '退款原因（必填）' : '退款原因';
+                this.refundDialogHelper.textContent = maxAmount > 0
+                    ? `本次最多可退 ${this.formatCurrency(maxAmount)}。`
+                    : '请输入退款金额和原因后提交。';
+                this.refundDialogEl.classList.remove('hidden');
+                this.syncDocumentVisibility(true);
+
+                return new Promise((resolve) => {
+                    this.state.refundDialog = {
+                        resolve,
+                        maxAmount,
+                        requireReason
+                    };
+
+                    setTimeout(() => {
+                        this.refundDialogAmount.focus();
+                        this.refundDialogAmount.select();
+                    }, 0);
+                });
+            },
+            submitRefundDialog() {
+                const activeDialog = this.state.refundDialog;
+                if (!activeDialog) {
+                    return;
+                }
+
+                const amount = this.roundCurrency(this.refundDialogAmount.value);
+                if (!(amount > 0)) {
+                    this.setRibbon('退款金额必须大于 0', 'error');
+                    this.refundDialogAmount.focus();
+                    return;
+                }
+
+                if (activeDialog.maxAmount > 0 && amount > activeDialog.maxAmount) {
+                    this.setRibbon(`退款金额不能超过 ${this.formatCurrency(activeDialog.maxAmount)}`, 'error');
+                    this.refundDialogAmount.focus();
+                    return;
+                }
+
+                const reason = String(this.refundDialogReason.value || '').trim();
+                if (activeDialog.requireReason && reason === '') {
+                    this.setRibbon('退款必须填写原因', 'error');
+                    this.refundDialogReason.focus();
+                    return;
+                }
+
+                this.closeRefundDialog({
+                    amount,
+                    reason
+                });
+            },
+            open(view, payload) {
+                const targetView = this.views[view];
+                if (!targetView) {
+                    console.error('[VancePay NUI] Unknown view on open:', view, payload);
+                    this.setRibbon(`未知视图: ${view || 'empty'}`, 'error');
+                    return;
+                }
+
+                this.closeRefundDialog(null);
+                this.state.view = view;
+                this.state.payloads[view] = payload || {};
+                this.app.classList.remove('hidden');
+                this.hideAllViews();
+                targetView.classList.remove('hidden');
+                this.syncDocumentVisibility(true);
+                if (view !== 'policeTicket') {
+                    this.setRibbon('已连接到 VancePay', 'neutral');
+                }
+            },
+            update(view, payload) {
+                if (!this.views[view]) {
+                    console.error('[VancePay NUI] Unknown view on update:', view, payload);
+                    return;
+                }
+
+                this.state.payloads[view] = payload || {};
+            },
+            close() {
+                this.closeRefundDialog(null);
+                this.state.view = null;
+                this.state.placementActive = false;
+                this.app.classList.add('hidden');
+                this.hideAllViews();
+                this.syncDocumentVisibility(false);
+                return this.post('closePanel');
+            },
+            setPlacementMode(active, payload = {}) {
+                this.state.placementActive = active === true;
+
+                if (this.state.placementActive) {
+                    this.app.classList.add('hidden');
+                } else if (this.state.view) {
+                    this.app.classList.remove('hidden');
+                    this.renderView(this.state.view, this.state.payloads[this.state.view] || {});
+                }
+
+                this.syncDocumentVisibility();
+
+                if (payload.message) {
+                    this.setRibbon(payload.message, payload.tone || 'neutral');
+                }
+            },
+            setCardSwipeOverlay(visible, payload = {}) {
+                if (!this.cardSwipeOverlay) {
+                    return;
+                }
+
+                if (visible) {
+                    this.state.payloads.card_swipe_overlay = payload;
+                    this.cardSwipeOverlay.classList.remove('hidden');
+                    this.syncDocumentVisibility(true);
+                    if (window.VancePayCustomer && window.VancePayCustomer.renderCardSwipeOverlay) {
+                        window.VancePayCustomer.renderCardSwipeOverlay(payload);
+                    }
+                    return;
+                }
+
+                this.cardSwipeOverlay.classList.add('hidden');
+                this.syncDocumentVisibility();
+                if (window.VancePayCustomer && window.VancePayCustomer.hideCardSwipeOverlay) {
+                    window.VancePayCustomer.hideCardSwipeOverlay();
+                }
+            },
+            renderView(view, payload) {
+                try {
+                    if (view === 'cashier' && window.VancePayCashier) window.VancePayCashier.render(payload);
+                    if (view === 'customer' && window.VancePayCustomer) window.VancePayCustomer.render(payload);
+                    if (view === 'admin' && window.VancePayAdmin) window.VancePayAdmin.render(payload);
+                    if (view === 'policeTicketManager' && window.VancePayPoliceTicketManager) window.VancePayPoliceTicketManager.render(payload);
+                    if (view === 'collections' && window.VancePayCollections) window.VancePayCollections.render(payload);
+                    if (view === 'policeTicket' && window.VancePayPoliceTicket) window.VancePayPoliceTicket.render(payload);
+                } catch (error) {
+                    const message = error && error.message ? error.message : String(error);
+                    console.error('[VancePay NUI] Render failed:', view, error, payload);
+                    this.setRibbon(`NUI 错误: ${message}`, 'error');
+                }
+            }
+        };
+
+        window.VancePayApp.reset();
+        window.VancePayApp.post('nuiReady').catch(() => {});
+
+        document.querySelectorAll('[data-close]').forEach((button) => {
+            button.addEventListener('click', () => window.VancePayApp.close());
+        });
+
+        document.getElementById('refund-dialog-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            window.VancePayApp.submitRefundDialog();
+        });
+
+        document.getElementById('refund-dialog-close').addEventListener('click', () => {
+            window.VancePayApp.closeRefundDialog(null);
+        });
+
+        document.getElementById('refund-dialog-cancel').addEventListener('click', () => {
+            window.VancePayApp.closeRefundDialog(null);
+        });
+
+        document.getElementById('refund-dialog').addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) {
+                window.VancePayApp.closeRefundDialog(null);
+            }
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && window.VancePayApp.state.refundDialog) {
+                window.VancePayApp.closeRefundDialog(null);
+                return;
+            }
+
+            if (event.key === 'Escape' && window.VancePayApp.state.view) {
+                window.VancePayApp.close();
+            }
+        });
+
+        window.addEventListener('message', (event) => {
+            const message = event.data || {};
+            const payloadWrapper = message.data || {};
+
+            if (message.action === 'open') {
+                const view = payloadWrapper.view;
+                const payload = payloadWrapper.payload || {};
+                window.VancePayApp.open(view, payload);
+                window.VancePayApp.renderView(view, payload);
+            }
+
+            if (message.action === 'update') {
+                const view = payloadWrapper.view;
+                const payload = payloadWrapper.payload || {};
+                window.VancePayApp.update(view, payload);
+                window.VancePayApp.renderView(view, payload);
+            }
+
+            if (message.action === 'cardSwipeOverlay') {
+                window.VancePayApp.setCardSwipeOverlay(payloadWrapper.visible === true, payloadWrapper.payload || {});
+            }
+
+            if (message.action === 'placementMode') {
+                window.VancePayApp.setPlacementMode(payloadWrapper.active === true, payloadWrapper);
+            }
+
+            if (message.action === 'close') {
+                window.VancePayApp.closeRefundDialog(null);
+                window.VancePayApp.state.view = null;
+                window.VancePayApp.state.placementActive = false;
+                window.VancePayApp.app.classList.add('hidden');
+                window.VancePayApp.hideAllViews();
+                window.VancePayApp.syncDocumentVisibility(false);
+            }
+        });
+
+        window.addEventListener('error', (event) => {
+            const message = event && event.message ? event.message : '未知脚本错误';
+            console.error('[VancePay NUI] Window error:', event.error || event);
+            window.VancePayApp.setRibbon(`脚本错误: ${message}`, 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            const reason = event && event.reason ? event.reason : '未知异步错误';
+            const message = reason && reason.message ? reason.message : String(reason);
+            console.error('[VancePay NUI] Unhandled rejection:', reason);
+            window.VancePayApp.setRibbon(`异步错误: ${message}`, 'error');
+        });
+    </script>
+
+    <script src="js/pos.js"></script>
+    <script src="js/customer.js"></script>
+    <script src="js/collections.js"></script>
+    <script src="js/police_ticket.js"></script>
+    <script src="js/police_ticket_manager.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

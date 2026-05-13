@@ -1,0 +1,34 @@
+# Local server/runtime config
+server.cfg
+*.cfg.local
+.env
+.env.*
+!.env.example
+
+# Logs, dumps, and temporary files
+*.log
+logs/
+*.sql.gz
+*.sql.zip
+*.dump
+*.bak
+*.tmp
+*.temp
+
+# Node/browser tooling cache
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor and local assistant state
+.vscode/
+.idea/
+.kiro/
+.codex
+skills-lock.json
+
+# OS files
+Thumbs.db
+.DS_Store

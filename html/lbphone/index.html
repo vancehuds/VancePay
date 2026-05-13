@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VancePay</title>
+    <link rel="stylesheet" href="./app.css">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="header-glow header-glow-a"></div>
+            <div class="header-glow header-glow-b"></div>
+
+            <div class="topbar">
+                <div class="brand-lockup">
+                    <span class="brand-mark">VP</span>
+                    <div class="brand-copy">
+                        <span class="brand-kicker">VancePay</span>
+                        <strong>Wallet</strong>
+                    </div>
+                </div>
+                <span class="sync-pill" id="sync-pill" data-state="loading">同步中</span>
+            </div>
+
+            <section class="hero-card wallet-overview-card">
+                <div class="wallet-balance-head">
+                    <div>
+                        <span class="card-label">VancePay 可提现余额</span>
+                        <strong id="balance-value">$0.00</strong>
+                    </div>
+                    <span class="wallet-chip">Wallet</span>
+                </div>
+
+                <div class="wallet-primary-actions" aria-label="钱包摘要">
+                    <div class="wallet-action-summary">
+                        <span>银行卡余额</span>
+                        <strong id="bank-balance">$0.00</strong>
+                    </div>
+                    <div class="wallet-action-summary attention">
+                        <span>待确认请求</span>
+                        <strong id="pending-count">0</strong>
+                    </div>
+                </div>
+
+                <div class="hero-metrics wallet-secondary-grid">
+                    <div class="metric-card">
+                        <span class="card-label">待解锁余额</span>
+                        <strong id="pending-balance">$0.00</strong>
+                    </div>
+                    <div class="metric-card">
+                        <span class="card-label">可借额度</span>
+                        <strong id="loan-credit-limit">$0.00</strong>
+                    </div>
+                </div>
+            </section>
+        </header>
+
+        <main class="app-main">
+            <section class="views">
+                <section class="view active" data-view-panel="requests">
+                    <div class="section-heading">
+                        <div>
+                            <span class="section-kicker">需要你确认</span>
+                            <h2>付款请求</h2>
+                        </div>
+                        <button class="ghost-button" id="refresh-button" type="button">刷新</button>
+                    </div>
+
+                    <div class="detail-panel" id="detail-panel" hidden>
+                        <div class="detail-header">
+                            <div class="detail-copy">
+                                <span class="detail-kicker">即将支付给</span>
+                                <h3 id="detail-store">VancePay</h3>
+                                <p id="detail-line">等待选择订单</p>
+                            </div>
+                            <div class="detail-amount" id="detail-amount">$0.00</div>
+                        </div>
+
+                        <div class="detail-summary" id="detail-summary"></div>
+                        <div class="detail-breakdown" id="detail-breakdown"></div>
+
+                        <div class="detail-actions">
+                            <button class="secondary-button" id="decline-button" type="button">拒绝</button>
+                            <button class="primary-button" id="confirm-button" type="button">支付 $0.00</button>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" id="requests-empty" hidden>
+                        <span class="empty-mark">VP</span>
+                        <h3>目前没有待确认请求</h3>
+                        <p>当店铺向你发起手机支付后，请求会出现在这里，等你确认或拒绝。</p>
+                    </div>
+
+                    <div class="list-heading">
+                        <span>全部请求</span>
+                        <span id="requests-counter">0 笔</span>
+                    </div>
+
+                    <div class="request-list" id="request-list"></div>
+                </section>
+
+                <section class="view" data-view-panel="balance">
+                    <div class="section-heading">
+                        <div>
+                            <span class="section-kicker">我的账本</span>
+                            <h2>VancePay 余额</h2>
+                        </div>
+                        <span class="section-counter" id="balance-history-counter">0 条</span>
+                    </div>
+
+                    <div class="detail-panel balance-panel">
+                        <div class="balance-grid" id="balance-summary-grid"></div>
+
+                        <div class="withdraw-panel">
+                            <div class="detail-copy">
+                                <span class="detail-kicker">余额提现</span>
+                                <h3>提现到银行卡</h3>
+                                <p id="withdraw-note">只有已解锁的 VancePay 余额可以提现到你的银行账户。</p>
+                            </div>
+
+                            <div class="withdraw-form">
+                                <label class="withdraw-field">
+                                    <span>提现金额</span>
+                                    <input id="withdraw-amount" type="number" min="0.01" step="0.01" placeholder="100.00">
+                                </label>
+                                <div class="withdraw-actions">
+                                    <button class="secondary-button" id="withdraw-all-button" type="button">全部提现</button>
+                                    <button class="primary-button" id="withdraw-button" type="button">提现</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" id="balance-history-empty" hidden>
+                        <span class="empty-mark">VP</span>
+                        <h3>还没有余额流水</h3>
+                        <p>完成收款提成后，流水会显示在这里，锁定结束后即可提现。</p>
+                    </div>
+
+                    <div class="list-heading">
+                        <span>余额流水</span>
+                        <span id="balance-history-subcopy">等待新的提成入账</span>
+                    </div>
+
+                    <div class="activity-list" id="balance-history-list"></div>
+
+                    <div class="list-pagination" id="balance-history-pagination" hidden>
+                        <button class="ghost-button pager-button" id="balance-history-prev-button" type="button">上一页</button>
+                        <span class="pager-status" id="balance-history-page-status">第 1 / 1 页</span>
+                        <button class="ghost-button pager-button" id="balance-history-next-button" type="button">下一页</button>
+                    </div>
+                </section>
+
+                <section class="view" data-view-panel="loans">
+                    <div class="section-heading">
+                        <div>
+                            <span class="section-kicker">VanceCtifo 信誉授信</span>
+                            <h2>贷款</h2>
+                        </div>
+                        <span class="section-counter" id="loan-eligibility">评估中</span>
+                    </div>
+
+                    <div class="detail-panel loan-score-panel">
+                        <div class="loan-score-head">
+                            <div class="detail-copy">
+                                <span class="detail-kicker">信誉分</span>
+                                <h3 id="loan-trust-score">--</h3>
+                                <p id="loan-trust-band">等待 VanceCtifo 返回评估</p>
+                            </div>
+                            <div class="loan-score-ring">
+                                <strong id="loan-available-limit">$0.00</strong>
+                                <span>可借</span>
+                            </div>
+                        </div>
+
+                        <div class="loan-metrics-grid">
+                            <article class="balance-card loan-metric-card">
+                                <span class="card-label">利率</span>
+                                <strong id="loan-rate">0%</strong>
+                                <p class="card-note">按本次期限一次性计息</p>
+                            </article>
+                            <article class="balance-card loan-metric-card">
+                                <span class="card-label">未还金额</span>
+                                <strong id="loan-outstanding">$0.00</strong>
+                                <p class="card-note" id="loan-due-summary">暂无待还贷款</p>
+                            </article>
+                        </div>
+
+                        <div class="loan-factor-list" id="loan-factor-list"></div>
+                    </div>
+
+                    <div class="loan-actions-grid">
+                        <div class="withdraw-panel loan-panel">
+                            <div class="detail-copy">
+                                <span class="detail-kicker">申请贷款</span>
+                                <h3>即时放款</h3>
+                                <p id="loan-apply-note">输入金额后会按当前信誉分计算应还金额。</p>
+                            </div>
+
+                            <div class="withdraw-form">
+                                <label class="withdraw-field">
+                                    <span>贷款金额</span>
+                                    <input id="loan-amount" type="number" min="1" step="0.01" placeholder="1000.00">
+                                </label>
+                                <label class="withdraw-field">
+                                    <span>贷款期限</span>
+                                    <select id="loan-term"></select>
+                                </label>
+
+                                <div class="loan-preview">
+                                    <div>
+                                        <span>利息</span>
+                                        <strong id="loan-interest-preview">$0.00</strong>
+                                    </div>
+                                    <div>
+                                        <span>应还</span>
+                                        <strong id="loan-total-preview">$0.00</strong>
+                                    </div>
+                                </div>
+
+                                <button class="primary-button" id="loan-request-button" type="button">申请贷款</button>
+                            </div>
+                        </div>
+
+                        <div class="withdraw-panel loan-panel repay-panel">
+                            <div class="detail-copy">
+                                <span class="detail-kicker">贷款还款</span>
+                                <h3 id="loan-repay-title">选择待还贷款</h3>
+                                <p id="loan-repay-note">优先展示最早到期的贷款。</p>
+                            </div>
+
+                            <div class="withdraw-form">
+                                <label class="withdraw-field">
+                                    <span>还款金额</span>
+                                    <input id="loan-repay-amount" type="number" min="0.01" step="0.01" placeholder="500.00">
+                                </label>
+                                <div class="withdraw-actions">
+                                    <button class="secondary-button" id="loan-repay-all-button" type="button">全部还清</button>
+                                    <button class="primary-button" id="loan-repay-button" type="button">还款</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" id="loan-empty" hidden>
+                        <span class="empty-mark">LN</span>
+                        <h3>还没有贷款记录</h3>
+                        <p>获得授信后，申请和还款记录会显示在这里。</p>
+                    </div>
+
+                    <div class="list-heading">
+                        <span>贷款记录</span>
+                        <span id="loan-counter">0 笔</span>
+                    </div>
+
+                    <div class="activity-list loan-list" id="loan-list"></div>
+                </section>
+
+                <section class="view" data-view-panel="activity">
+                    <div class="section-heading">
+                        <div>
+                            <span class="section-kicker">最近记录</span>
+                            <h2>资金活动</h2>
+                        </div>
+                        <span class="section-counter" id="activity-counter">0 条</span>
+                    </div>
+
+                    <div class="empty-state" id="activity-empty" hidden>
+                        <span class="empty-mark">TX</span>
+                        <h3>还没有资金活动</h3>
+                        <p>完成支付或收到退款后，这里会自动同步最近的账务记录。</p>
+                    </div>
+
+                    <div class="activity-list" id="activity-list"></div>
+
+                    <div class="list-pagination" id="activity-pagination" hidden>
+                        <button class="ghost-button pager-button" id="activity-prev-button" type="button">上一页</button>
+                        <span class="pager-status" id="activity-page-status">第 1 / 1 页</span>
+                        <button class="ghost-button pager-button" id="activity-next-button" type="button">下一页</button>
+                    </div>
+                </section>
+            </section>
+        </main>
+
+        <nav class="bottom-nav tabs">
+            <button class="nav-item tab-button active" data-view="requests" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                <span>请求</span>
+            </button>
+            <button class="nav-item tab-button" data-view="balance" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 7h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+                    <path d="M3 10h18"/>
+                    <path d="M16 15h2"/>
+                </svg>
+                <span>余额</span>
+            </button>
+            <button class="nav-item tab-button" data-view="loans" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19V5"/>
+                    <path d="M4 19h16"/>
+                    <path d="M8 15l3-3 2 2 5-6"/>
+                    <path d="M17 8h1v1"/>
+                </svg>
+                <span>贷款</span>
+            </button>
+            <button class="nav-item tab-button" data-view="activity" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                <span>活动</span>
+            </button>
+        </nav>
+
+        <div class="toast" id="toast" hidden></div>
+    </div>
+
+    <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="ticket-halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 250) rotate(90) scale(188 188)">
+      <stop stop-color="#9BDFFF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#9BDFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ticket-paper" x1="153" y1="111" x2="356" y2="403" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8E5"/>
+      <stop offset="0.55" stop-color="#F4FBFF"/>
+      <stop offset="1" stop-color="#CBEAFF"/>
+    </linearGradient>
+    <linearGradient id="ticket-header" x1="185" y1="146" x2="324" y2="223" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A3B76"/>
+      <stop offset="1" stop-color="#159CE0"/>
+    </linearGradient>
+    <linearGradient id="ticket-badge" x1="218" y1="156" x2="289" y2="234" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE18F"/>
+      <stop offset="1" stop-color="#D99023"/>
+    </linearGradient>
+    <linearGradient id="ticket-stamp" x1="286" y1="286" x2="380" y2="370" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF9B79"/>
+      <stop offset="1" stop-color="#D94D44"/>
+    </linearGradient>
+    <filter id="ticket-shadow" x="105" y="82" width="303" height="376" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="24"/>
+      <feGaussianBlur stdDeviation="18"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0118 0 0 0 0 0.0706 0 0 0 0 0.1686 0 0 0 0.34 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <circle cx="256" cy="250" r="188" fill="url(#ticket-halo)"/>
+
+  <g filter="url(#ticket-shadow)">
+    <g transform="translate(254 246) rotate(-7) translate(-254 -246)">
+      <path d="M177 114H329C351 114 369 132 369 154V389L338 372L307 389L276 372L245 389L214 372L183 389V154C183 132 155 114 177 114Z" fill="url(#ticket-paper)"/>
+      <path d="M177 114H329C351 114 369 132 369 154V389L338 372L307 389L276 372L245 389L214 372L183 389V154C183 132 155 114 177 114Z" stroke="#D9F0FF" stroke-opacity="0.62"/>
+      <rect x="199" y="143" width="132" height="78" rx="20" fill="url(#ticket-header)"/>
+      <path d="M255 156L265 171L283 177L272 193L272 213L255 206L238 213L238 193L227 177L245 171L255 156Z" fill="url(#ticket-badge)"/>
+      <circle cx="255" cy="188" r="13" fill="#FFF4CF" fill-opacity="0.9"/>
+      <path d="M247 189L253 195L264 181" stroke="#9C650D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M209 254H337" stroke="#0A458A" stroke-width="12" stroke-linecap="round" stroke-opacity="0.28"/>
+      <path d="M209 284H313" stroke="#0A458A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.18"/>
+      <path d="M209 314H286" stroke="#0A458A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.14"/>
+      <path d="M209 343H266" stroke="#0A458A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.14"/>
+      <path d="M324 121V384" stroke="#FFFFFF" stroke-width="4" stroke-opacity="0.35" stroke-dasharray="10 13"/>
+    </g>
+  </g>
+
+  <g transform="translate(337 325) rotate(-15) translate(-337 -325)">
+    <circle cx="337" cy="325" r="47" fill="url(#ticket-stamp)" fill-opacity="0.96"/>
+    <circle cx="337" cy="325" r="35" stroke="#FFE0D6" stroke-width="7" stroke-opacity="0.78"/>
+    <path d="M315 327L329 341L361 308" stroke="#FFF2EC" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,0 +1,59 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="tablet-halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 250) rotate(90) scale(188 188)">
+      <stop stop-color="#93D6FF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#93D6FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tablet-body" x1="150" y1="108" x2="356" y2="404" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A2244"/>
+      <stop offset="0.58" stop-color="#113C70"/>
+      <stop offset="1" stop-color="#19568F"/>
+    </linearGradient>
+    <linearGradient id="tablet-screen" x1="176" y1="142" x2="334" y2="362" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4FBFF"/>
+      <stop offset="1" stop-color="#B3DFFF"/>
+    </linearGradient>
+    <linearGradient id="tablet-accent" x1="193" y1="167" x2="306" y2="241" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E71D1"/>
+      <stop offset="1" stop-color="#12B6F2"/>
+    </linearGradient>
+    <filter id="tablet-shadow" x="111" y="85" width="289" height="371" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="24"/>
+      <feGaussianBlur stdDeviation="18"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0118 0 0 0 0 0.0706 0 0 0 0 0.1686 0 0 0 0.34 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <circle cx="256" cy="250" r="188" fill="url(#tablet-halo)"/>
+
+  <g filter="url(#tablet-shadow)">
+    <g transform="translate(256 245) rotate(-9) translate(-256 -245)">
+      <rect x="147" y="121" width="218" height="270" rx="34" fill="url(#tablet-body)"/>
+      <rect x="147.5" y="121.5" width="217" height="269" rx="33.5" stroke="#D0ECFF" stroke-opacity="0.16"/>
+      <rect x="171" y="148" width="170" height="216" rx="24" fill="url(#tablet-screen)"/>
+      <rect x="193" y="171" width="126" height="64" rx="18" fill="url(#tablet-accent)"/>
+      <path d="M223 190H243L260 244L276 190H295L267 264H252L223 190Z" fill="#FFFFFF"/>
+      <path d="M258 190H280C302 190 317 202 317 220C317 239 302 251 280 251H267V264H258V190ZM267 199V242H279C293 242 304 234 304 220C304 207 293 199 279 199H267Z" fill="#D7F0FF"/>
+      <rect x="193" y="255" width="74" height="12" rx="6" fill="#0A458A" fill-opacity="0.82"/>
+      <rect x="279" y="255" width="40" height="12" rx="6" fill="#12B6F2" fill-opacity="0.9"/>
+      <rect x="193" y="281" width="126" height="12" rx="6" fill="#0A458A" fill-opacity="0.22"/>
+      <rect x="193" y="311" width="30" height="26" rx="9" fill="#0A458A" fill-opacity="0.14"/>
+      <rect x="233" y="297" width="30" height="40" rx="9" fill="#0E71D1" fill-opacity="0.9"/>
+      <rect x="273" y="274" width="30" height="63" rx="9" fill="#F2C46D"/>
+      <rect x="313" y="324" width="6" height="13" rx="3" fill="#0A458A" fill-opacity="0.24"/>
+      <rect x="193" y="347" width="96" height="7" rx="3.5" fill="#0A458A" fill-opacity="0.18"/>
+      <circle cx="255.5" cy="134.5" r="3.5" fill="#D8F0FF" fill-opacity="0.56"/>
+      <rect x="237" y="377" width="38" height="6" rx="3" fill="#D8F0FF" fill-opacity="0.32"/>
+    </g>
+  </g>
+
+  <g>
+    <circle cx="371" cy="173" r="10" fill="#F2C46D"/>
+    <path d="M371 153V193" stroke="#F2C46D" stroke-width="4" stroke-linecap="round" stroke-opacity="0.55"/>
+    <path d="M351 173H391" stroke="#F2C46D" stroke-width="4" stroke-linecap="round" stroke-opacity="0.55"/>
+  </g>
+</svg>

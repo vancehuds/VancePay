@@ -1,0 +1,61 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="book-halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 250) rotate(90) scale(188 188)">
+      <stop stop-color="#83D8FF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#83D8FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="book-cover" x1="149" y1="115" x2="359" y2="393" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#09254E"/>
+      <stop offset="0.55" stop-color="#0D5599"/>
+      <stop offset="1" stop-color="#1598D2"/>
+    </linearGradient>
+    <linearGradient id="book-paper" x1="178" y1="146" x2="326" y2="359" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9E8"/>
+      <stop offset="1" stop-color="#E9F4FF"/>
+    </linearGradient>
+    <linearGradient id="book-badge" x1="220" y1="171" x2="291" y2="248" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE08F"/>
+      <stop offset="1" stop-color="#D89424"/>
+    </linearGradient>
+    <linearGradient id="book-pen" x1="331" y1="206" x2="397" y2="351" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EEF9FF"/>
+      <stop offset="0.35" stop-color="#168CE2"/>
+      <stop offset="1" stop-color="#0B315E"/>
+    </linearGradient>
+    <filter id="book-shadow" x="103" y="84" width="311" height="370" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="24"/>
+      <feGaussianBlur stdDeviation="18"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0118 0 0 0 0 0.0667 0 0 0 0 0.1529 0 0 0 0.34 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <circle cx="256" cy="250" r="188" fill="url(#book-halo)"/>
+
+  <g filter="url(#book-shadow)">
+    <g transform="translate(246 244) rotate(-8) translate(-246 -244)">
+      <rect x="139" y="116" width="220" height="282" rx="30" fill="url(#book-cover)"/>
+      <rect x="139.5" y="116.5" width="219" height="281" rx="29.5" stroke="#D6F0FF" stroke-opacity="0.2"/>
+      <path d="M178 116H214V398H178C156 398 139 381 139 359V155C139 133 156 116 178 116Z" fill="#061B3A" fill-opacity="0.38"/>
+      <rect x="193" y="145" width="132" height="224" rx="22" fill="url(#book-paper)"/>
+      <path d="M211 274H303" stroke="#0A458A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.28"/>
+      <path d="M211 302H293" stroke="#0A458A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.18"/>
+      <path d="M211 330H272" stroke="#0A458A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.14"/>
+      <path d="M256 168L267 184L286 190L274 207L274 227L256 220L238 227L238 207L226 190L245 184L256 168Z" fill="url(#book-badge)"/>
+      <circle cx="256" cy="200" r="15" fill="#FFF4CC" fill-opacity="0.88"/>
+      <path d="M246 201L253 208L267 192" stroke="#A86A0E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="161" y="154" width="12" height="204" rx="6" fill="#7ECFFF" fill-opacity="0.38"/>
+    </g>
+  </g>
+
+  <g transform="translate(360 284) rotate(-25) translate(-360 -284)">
+    <rect x="344" y="193" width="32" height="148" rx="16" fill="url(#book-pen)"/>
+    <path d="M344 328H376L360 369L344 328Z" fill="#F7C56F"/>
+    <path d="M354 350H366L360 369L354 350Z" fill="#132A45"/>
+    <rect x="344" y="218" width="32" height="13" fill="#EAF8FF" fill-opacity="0.55"/>
+    <rect x="344" y="248" width="32" height="12" fill="#061B3A" fill-opacity="0.22"/>
+  </g>
+</svg>

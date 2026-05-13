@@ -1,0 +1,63 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="pos-halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 250) rotate(90) scale(188 188)">
+      <stop stop-color="#9DD8FF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#9DD8FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pos-device" x1="167" y1="125" x2="355" y2="388" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D2443"/>
+      <stop offset="0.58" stop-color="#173F71"/>
+      <stop offset="1" stop-color="#21558F"/>
+    </linearGradient>
+    <linearGradient id="pos-screen" x1="196" y1="156" x2="316" y2="238" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1CB8FF"/>
+      <stop offset="1" stop-color="#0068C9"/>
+    </linearGradient>
+    <linearGradient id="pos-card" x1="266" y1="257" x2="382" y2="330" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EEF9FF"/>
+      <stop offset="1" stop-color="#9DD7FF"/>
+    </linearGradient>
+    <filter id="pos-shadow" x="114" y="92" width="301" height="351" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="24"/>
+      <feGaussianBlur stdDeviation="20"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0157 0 0 0 0 0.0627 0 0 0 0 0.1451 0 0 0 0.34 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_1" result="shape"/>
+    </filter>
+  </defs>
+
+  <circle cx="256" cy="250" r="188" fill="url(#pos-halo)"/>
+
+  <g filter="url(#pos-shadow)">
+    <g transform="translate(248 234) rotate(8) translate(-248 -234)">
+      <rect x="164" y="128" width="172" height="258" rx="34" fill="url(#pos-device)"/>
+      <rect x="164" y="128" width="172" height="258" rx="34" stroke="#C6E7FF" stroke-opacity="0.14"/>
+      <rect x="190" y="154" width="120" height="74" rx="18" fill="url(#pos-screen)"/>
+      <path d="M223 176H243L260 236L277 176H296L267 263H253L223 176Z" fill="#FFFFFF"/>
+      <path d="M258 176H280C303 176 319 189 319 208C319 228 303 241 280 241H267V263H258V176ZM267 185V232H280C294 232 306 223 306 208C306 194 294 185 280 185H267Z" fill="#D7F0FF"/>
+      <rect x="188" y="250" width="124" height="18" rx="9" fill="#061A34" fill-opacity="0.42"/>
+      <rect x="191" y="252" width="118" height="10" rx="5" fill="#0E2B4E"/>
+      <rect x="192" y="282" width="30" height="22" rx="7" fill="#E8F6FF" fill-opacity="0.14"/>
+      <rect x="235" y="282" width="30" height="22" rx="7" fill="#E8F6FF" fill-opacity="0.14"/>
+      <rect x="278" y="282" width="30" height="22" rx="7" fill="#E8F6FF" fill-opacity="0.14"/>
+      <rect x="192" y="315" width="30" height="22" rx="7" fill="#E8F6FF" fill-opacity="0.14"/>
+      <rect x="235" y="315" width="30" height="22" rx="7" fill="#F2C46D" fill-opacity="0.92"/>
+      <rect x="278" y="315" width="30" height="22" rx="7" fill="#61D98B" fill-opacity="0.92"/>
+      <rect x="192" y="348" width="30" height="22" rx="7" fill="#FF8C80" fill-opacity="0.92"/>
+      <rect x="235" y="348" width="30" height="22" rx="7" fill="#E8F6FF" fill-opacity="0.14"/>
+      <rect x="278" y="348" width="30" height="22" rx="7" fill="#E8F6FF" fill-opacity="0.14"/>
+    </g>
+  </g>
+
+  <g transform="translate(322 306) rotate(-18) translate(-322 -306)">
+    <rect x="248" y="261" width="148" height="90" rx="22" fill="url(#pos-card)"/>
+    <rect x="248.5" y="261.5" width="147" height="89" rx="21.5" stroke="#F7FCFF" stroke-opacity="0.62"/>
+    <rect x="266" y="282" width="40" height="30" rx="7" fill="#E9C36F"/>
+    <path d="M286 282V312" stroke="#B27D20" stroke-width="4"/>
+    <path d="M266 297H306" stroke="#B27D20" stroke-width="4"/>
+    <path d="M324 289H369" stroke="#0A458A" stroke-width="10" stroke-linecap="round" stroke-opacity="0.84"/>
+    <path d="M324 312H353" stroke="#0A458A" stroke-width="8" stroke-linecap="round" stroke-opacity="0.5"/>
+  </g>
+</svg>
