@@ -1,5 +1,5 @@
 # VancePay
-[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)  
 Language: [中文](README.md) | [English](README.en.md)
 
 VancePay is a FiveM merchant payment resource for Qbox servers. It includes POS collection, phone/card payments, refunds, store and terminal management, audit logs, and basic reports.
