@@ -273,9 +273,3 @@ Main files:
 ## License
 
 This project is released under AGPL-3.0-or-later. See [LICENSE](LICENSE).
-
-## Future Integration Suggestions
-
-- connect to your server's existing banking or wallet resource for stronger fund consistency
-- add more store-operation features to `vp_tablet`
-- adapt NUI theme and copy to your server UI style
