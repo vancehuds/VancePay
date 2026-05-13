@@ -1,4 +1,5 @@
 # VancePay
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
 
 语言：[中文](README.md) | [English](README.en.md)
 
