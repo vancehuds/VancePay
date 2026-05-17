@@ -191,7 +191,7 @@ Config.POSModels = {
 Config.AdminGroups = { 'god', 'admin', 'superadmin' }
 
 Config.Banking = {
-    adapter = 'qbx_core',
+    adapter = 'p_banking',
     moneyType = 'bank',
     qbxResource = 'qbx_core',
     pBankingResource = 'p_banking',
